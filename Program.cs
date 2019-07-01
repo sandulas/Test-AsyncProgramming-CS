@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Net;
+using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace AsynchronousProgrammingTest
@@ -7,26 +10,79 @@ namespace AsynchronousProgrammingTest
 	{
 		static async Task Main(string[] args)
 		{
-			Console.WriteLine("Starting async method 1...");
+			await method1BatchV2Async(20);
+			//Console.ReadLine();
+			//Console.WriteLine($"Thread {Thread.CurrentThread.ManagedThreadId}: Starting async methods...");
 
-			var a = Method1Async();
+			//var asyncTask1 = method1Async(1);
+			//var asyncTask2 = method1Async(2);
+			//var asyncTask3 = method1Async(3);
 
-			Console.WriteLine("Awaiting async method 1...");
+			//Console.WriteLine($"Thread {Thread.CurrentThread.ManagedThreadId}: Awaiting async methods...");
+			////Console.ReadLine();
 
-			await a;
+			//await asyncTask1;
+			//await asyncTask2;
+			//await asyncTask3;
 
-			Console.WriteLine("Async method 1 finished runnning.");
+			//Console.WriteLine($"Thread {Thread.CurrentThread.ManagedThreadId}: Async methods finished runnning.");
 		}
 
-		static async Task<int> Method1Async()
+		static async Task method1BatchV1Async(int count)
 		{
-			Console.WriteLine("This is async method 1! I'm doing stuff...");
-			await Task.Delay(5000);
-			return 1;
+			for (int i = 0; i < count; i++)
+			{
+				await method1Async(i);
+			}
+		}
+
+		static async Task method1BatchV2Async(int count)
+		{
+			var tasks = new Task[count];
+
+			for (int i = 0; i < count; i++)
+			{
+				tasks[i] = method1Async(i);
+			}
+			for (int i = 0; i < count; i++)
+			{
+				await tasks[i];
+			}
+		}
+
+		static async Task<string> method1Async(int i)
+		{
+			Console.WriteLine($"Thread {Thread.CurrentThread.ManagedThreadId}: This is async method { i }! I'm doing stuff...");
+
+			HttpClient httpClient = new HttpClient();
+			var request = await httpClient.GetAsync("http://google.com");
+			var download = await request.Content.ReadAsStringAsync();
+
+			//await Task.Delay(5000);
+
+			Console.WriteLine($"Thread {Thread.CurrentThread.ManagedThreadId}: This is async method { i }! I'm done!");
+			return download;
+		}
+
+		static void computePIBatch(int count)
+		{
+			for (int i = 0; i < count; i++)
+			{
+				computePI();
+			}
+		}
+
+		static async Task computePIBatchAsync(int count)
+		{
+			//var tasks = new Task[count];
+			for (int i = 0; i < count; i++)
+			{
+				await Task.Run(() => computePI());
+			}
 		}
 
 		// compute PI using Taylor series: PI/4 = 1 - 1/3 + 1/5 - 1/7 + 1/9 - ... 
-		static void computePI()
+		static double computePI()
 		{
 			double quarterPI = 1;
 			double taylorTerm;
@@ -40,7 +96,8 @@ namespace AsynchronousProgrammingTest
 				quarterPI += taylorTerm;
 			}
 
-			Console.WriteLine($"Computed PI: { quarterPI * 4 }; Math.PI: { Math.PI }");
+			return quarterPI * 4;
+			//Console.WriteLine($"Computed PI: { quarterPI * 4 }; Math.PI: { Math.PI }");
 		}
 	}
 }
