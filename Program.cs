@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading;
@@ -10,6 +11,8 @@ namespace AsynchronousProgrammingTest
 	{
 		static async Task Main(string[] args)
 		{
+			parallelForEach();
+
 			await method1BatchV2Async(20);
 			//Console.ReadLine();
 			//Console.WriteLine($"Thread {Thread.CurrentThread.ManagedThreadId}: Starting async methods...");
@@ -77,7 +80,7 @@ namespace AsynchronousProgrammingTest
 			//var tasks = new Task[count];
 			for (int i = 0; i < count; i++)
 			{
-				await Task.Run(() => computePI());
+				await Task.Run(computePI);
 			}
 		}
 
@@ -98,6 +101,32 @@ namespace AsynchronousProgrammingTest
 
 			return quarterPI * 4;
 			//Console.WriteLine($"Computed PI: { quarterPI * 4 }; Math.PI: { Math.PI }");
+		}
+
+		// compute PI using Taylor series: PI/4 = 1 - 1/3 + 1/5 - 1/7 + 1/9 - ... 
+		static double computePI(long steps)
+		{
+			double quarterPI = 1;
+			double taylorTerm;
+
+			for (long i = 0; i < steps; i++)
+			{
+				taylorTerm = (double)1 / (i * 2 + 3);
+
+				if (i % 2 == 0) taylorTerm = -taylorTerm;
+
+				quarterPI += taylorTerm;
+			}
+
+			return quarterPI * 4;
+			//Console.WriteLine($"Computed PI: { quarterPI * 4 }; Math.PI: { Math.PI }");
+		}
+
+		static void parallelForEach()
+		{
+			int[] numbers = Enumerable.Range(0, 10).ToArray();
+
+			Parallel.ForEach(numbers, x => Console.Write($"{x} "));
 		}
 	}
 }
